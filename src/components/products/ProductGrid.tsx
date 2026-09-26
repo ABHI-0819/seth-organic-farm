@@ -25,14 +25,17 @@ export function ProductGrid({
 }: ProductGridProps) {
   if (products.length === 0 && emptyMessage) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">{emptyMessage}</p>
+      <div className="text-center py-16 px-4 bg-white/70 rounded-3xl border border-[#e3dcd2] shadow-xs">
+        <div className="size-12 mx-auto rounded-full bg-[#e8f3eb] flex items-center justify-center text-lg mb-3">
+          🌱
+        </div>
+        <p className="text-[#5c6b5e] font-medium">{emptyMessage}</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       {products.map((product, index) => (
         <ProductCard
           key={product.id}

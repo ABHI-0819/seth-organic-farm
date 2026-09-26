@@ -66,5 +66,5 @@ export async function resolveCurrency(
     const match = market.countries?.some((c) => c.iso.toLowerCase() === iso);
     if (match) return market.currency;
   }
-  return undefined;
+  return process.env.NEXT_PUBLIC_DEFAULT_CURRENCY || "INR";
 }

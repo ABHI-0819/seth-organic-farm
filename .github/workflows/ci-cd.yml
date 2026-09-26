@@ -1,0 +1,117 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # 1. Continuous Integration (Lint, Typecheck, Test, Build)
+  # ============================================================================
+  ci:
+    name: Code Quality & Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint & Formatting Check
+        run: pnpm run check
+
+      - name: TypeScript Type Check
+        run: pnpm exec tsc --noEmit
+
+      - name: Run Unit & Integration Tests
+        run: pnpm run test
+
+      - name: Verify Production Next.js Build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          # Pass dummy environment flags so build succeeds in headless CI
+          NEXT_PUBLIC_DEFAULT_COUNTRY: in
+          NEXT_PUBLIC_DEFAULT_LOCALE: en-IN
+          NEXT_PUBLIC_DEFAULT_CURRENCY: INR
+          NEXT_PUBLIC_STORE_NAME: "Seth Organic Farm"
+          SPREE_API_URL: "http://localhost:4000"
+          SPREE_PUBLISHABLE_KEY: "dummy_pk_for_ci_build"
+        run: pnpm run build
+
+  # ============================================================================
+  # 2. Continuous Deployment (Automated Deploy to Production VPS)
+  # ============================================================================
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+    needs: ci
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check Deployment Credentials
+        id: check-secrets
+        run: |
+          if [ -n "${{ secrets.SSH_HOST }}" ] && [ -n "${{ secrets.SSH_USER }}" ] && [ -n "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "SSH deployment secrets detected. Proceeding with deployment."
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::SSH_HOST, SSH_USER, or SSH_PRIVATE_KEY secrets not set. Skipping automated deployment step."
+          fi
+
+      - name: Deploy via SSH to VPS
+        if: steps.check-secrets.outputs.configured == 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            echo "==> Deploying Seth Organic Farm update..."
+            cd /var/www/my-store || cd ~/my-store
+
+            # 1. Fetch latest changes
+            git pull origin main
+
+            # 2. Install production dependencies
+            pnpm install --frozen-lockfile
+
+            # 3. Build optimized production bundle
+            pnpm build
+
+            # 4. Restart runtime process (PM2 or Docker)
+            if command -v pm2 >/dev/null 2>&1; then
+              echo "==> Reloading PM2 processes..."
+              pm2 reload nextjs-storefront || pm2 restart nextjs-storefront || pm2 start ecosystem.config.cjs
+            elif [ -f docker-compose.prod.yml ]; then
+              echo "==> Restarting Docker production services..."
+              docker compose -f docker-compose.prod.yml up -d --build web
+            fi
+
+            # 5. Health Check
+            sleep 3
+            curl -f http://localhost:3000/ || curl -f http://localhost:3001/ || exit 1
+            echo "==> Deployment successfully finished!"

@@ -45,15 +45,19 @@ export async function generateCategoryMetadata({
         path: `/c/${category.permalink}`,
         currentResourceFingerprint: categoryTranslationFingerprint(category),
         resolvePath: async (target) => {
-          const localizedCategory = await cachedGetCategory(
-            category.id,
-            undefined,
-            { country: target.country, locale: target.locale },
-          );
-          return {
-            path: `/c/${localizedCategory.permalink}`,
-            fingerprint: categoryTranslationFingerprint(localizedCategory),
-          };
+          try {
+            const localizedCategory = await cachedGetCategory(
+              category.id,
+              undefined,
+              { country: target.country, locale: target.locale },
+            );
+            return {
+              path: `/c/${localizedCategory.permalink}`,
+              fingerprint: categoryTranslationFingerprint(localizedCategory),
+            };
+          } catch {
+            return null;
+          }
         },
       })
     : undefined;

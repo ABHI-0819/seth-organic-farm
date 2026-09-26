@@ -1,0 +1,57 @@
+# ==============================================================================
+# Seth Organic Farm - Caddy Production Gateway
+# Automated Let's Encrypt TLS, HTTP/3, Static Caching & Security Headers
+# ==============================================================================
+
+{$DOMAIN:sethorganicfarm.com}, www.{$DOMAIN:sethorganicfarm.com} {
+    # Automatic TLS management with Let's Encrypt
+    tls {$ADMIN_EMAIL:admin@sethorganicfarm.com}
+
+    # Enable compression (Zstandard and Gzip)
+    encode zstd gzip
+
+    # Production Security Headers
+    header {
+        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        -Server
+    }
+
+    # Static Assets Caching (Fingerprinted Rails and ActiveStorage assets)
+    @static {
+        path /assets/* /packs/* /vite/* /favicon.ico /robots.txt
+    }
+    header @static {
+        Cache-Control "public, max-age=31536000, immutable"
+    }
+
+    @storage {
+        path /rails/active_storage/*
+    }
+    header @storage {
+        Cache-Control "public, max-age=86400, stale-while-revalidate=604800"
+    }
+
+    # Reverse proxy all requests to Puma on internal port 3000
+    reverse_proxy web:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Port {server_port}
+
+        # Buffering & Streaming options
+        flush_interval -1
+    }
+
+    # Request and Access Logging
+    log {
+        output stdout
+        format console
+        level INFO
+    }
+}

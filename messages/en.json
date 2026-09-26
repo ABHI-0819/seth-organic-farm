@@ -53,7 +53,7 @@
     "updatePreferencesFailed": "We couldn't update your region preferences. Please try again."
   },
   "footer": {
-    "description": "Open-source ecommerce powered by Spree REST API, TypeScript SDK, and Next.js. Self-host it. Own your data. Zero platform fees.",
+    "description": "Pure, certified organic essentials directly from trusted Indian farms. Sustainably harvested and 100% pesticide-free for a healthy, conscious life.",
     "forkOnGithub": "Fork this storefront on GitHub",
     "quickstartGuide": "Quickstart guide",
     "learnMore": "Learn more about Spree Commerce",
@@ -66,13 +66,13 @@
     "cart": "Cart",
     "policies": "Policies",
     "poweredBy": "Powered by",
-    "copyright": "© {year} {storeName}. Powered by Spree Commerce.",
+    "copyright": "© {year} {storeName}. All rights reserved.",
     "wholesale": "Trade & Wholesale"
   },
   "home": {
-    "welcome": "{storeName} Storefront",
-    "heroDescription": "A production-ready, open-source storefront built with Next.js, React, and the Spree TypeScript SDK. Self-host it. Own your stack. No vendor lock-in. Zero platform fees.",
-    "shopNow": "Shop All",
+    "welcome": "Welcome to {storeName}",
+    "heroDescription": "Handcrafted, certified organic produce and natural wellness essentials sourced directly from ethical Indian farmers. Chemical-free, nutrient-rich, and sustainably packaged.",
+    "shopNow": "Shop Organic Range",
     "forkOnGithub": "Fork on GitHub",
     "quickstartGuide": "Quickstart Guide",
     "featuredProducts": "Featured Products",

@@ -37,7 +37,7 @@ export function getStoreUrl(): string | undefined {
  * Get the store name from environment variables.
  */
 export function getStoreName(): string {
-  return process.env.NEXT_PUBLIC_STORE_NAME || "Spree Store";
+  return process.env.NEXT_PUBLIC_STORE_NAME || "Seth Organic Form";
 }
 
 /**
@@ -46,7 +46,7 @@ export function getStoreName(): string {
 export function getStoreDescription(): string {
   return (
     process.env.NEXT_PUBLIC_STORE_DESCRIPTION ||
-    "A modern e-commerce storefront powered by Spree Commerce and Next.js."
+    "Premium organic products, ethically sourced and handcrafted for natural living."
   );
 }
 
@@ -54,22 +54,32 @@ export function getStoreDescription(): string {
  * Get the default country ISO code (lowercase).
  */
 export function getDefaultCountry(): string {
-  return (process.env.NEXT_PUBLIC_DEFAULT_COUNTRY || "us").toLowerCase();
+  return (process.env.NEXT_PUBLIC_DEFAULT_COUNTRY || "in").toLowerCase();
 }
 
 /**
  * Get the default locale code.
  */
 export function getDefaultLocale(): string {
-  return process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "en";
+  return process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "en-IN";
+}
+
+/**
+ * Get the default currency code.
+ */
+export function getDefaultCurrency(): string {
+  return process.env.NEXT_PUBLIC_DEFAULT_CURRENCY || "INR";
 }
 
 /**
  * Get the SEO title, preferring STORE_SEO_TITLE and falling back to the
- * store name (NEXT_PUBLIC_STORE_NAME).
+ * store name (NEXT_PUBLIC_STORE_NAME) with brand tagline.
  */
 export function getStoreSeoTitle(): string {
-  return process.env.STORE_SEO_TITLE || getStoreName();
+  return (
+    process.env.STORE_SEO_TITLE ||
+    `${getStoreName()} - Premium Organic Products`
+  );
 }
 
 /**
@@ -84,7 +94,7 @@ export function getStoreMetaDescription(): string {
  * Get the "from" address for transactional emails.
  */
 export function getStoreEmailFrom(): string {
-  return process.env.EMAIL_FROM || "orders@example.com";
+  return process.env.EMAIL_FROM || "orders@sethorganicform.com";
 }
 
 /**

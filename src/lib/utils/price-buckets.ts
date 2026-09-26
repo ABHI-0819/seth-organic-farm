@@ -9,18 +9,18 @@ const THRESHOLDS = [50, 100, 200];
 
 function formatCurrency(
   amount: number,
-  currency: string,
-  locale?: string,
+  currency = "INR",
+  locale = "en-IN",
 ): string {
   try {
-    return new Intl.NumberFormat(locale || "en", {
+    return new Intl.NumberFormat(locale || "en-IN", {
       style: "currency",
-      currency,
+      currency: currency || "INR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
   } catch {
-    return `${currency} ${amount}`;
+    return `₹${amount}`;
   }
 }
 

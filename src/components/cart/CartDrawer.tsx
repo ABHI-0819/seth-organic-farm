@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import { useCart } from "@/contexts/CartContext";
 import { trackRemoveFromCart, trackViewCart } from "@/lib/analytics/gtm";
+import { formatPrice } from "@/lib/utils/format";
 import { extractBasePath } from "@/lib/utils/path";
 
 const ExpressCheckoutButton = dynamic(
@@ -111,6 +112,41 @@ export function CartDrawer() {
             <X className="w-6 h-6" />
           </Button>
         </SheetHeader>
+        {/* Free Shipping Progress Indicator */}
+        {!isEmpty &&
+          (() => {
+            const rawTotal = cart?.total ? parseFloat(cart.total) : 0;
+            const needed = Math.max(0, 2000 - rawTotal);
+            const percent = Math.min(100, Math.round((rawTotal / 2000) * 100));
+            return (
+              <div className="bg-[#EBF3ED] px-4 py-2.5 border-b border-[#D8E6DC]">
+                <div className="text-xs font-semibold text-[#1F2E22] mb-1.5 flex justify-between">
+                  {needed > 0 ? (
+                    <span>
+                      Add{" "}
+                      <strong className="text-[#8C5438]">
+                        ₹{needed.toLocaleString("en-IN")}
+                      </strong>{" "}
+                      more for Free Farm Shipping
+                    </span>
+                  ) : (
+                    <span className="text-[#2D4030] font-bold">
+                      ✓ Qualified for Free Farm Express Shipping
+                    </span>
+                  )}
+                  <span className="font-mono text-[#2D4030] text-[11px]">
+                    {percent}%
+                  </span>
+                </div>
+                <div className="w-full h-1.5 bg-[#DCE6DE] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#2D4030] transition-all duration-300 rounded-full"
+                    style={{ width: `${percent}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })()}
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="p-4 space-y-4">
@@ -141,91 +177,124 @@ export function CartDrawer() {
             </div>
           ) : (
             <ul className="divide-y divide-gray-200">
-              {lineItems.map((item) => (
-                <li key={item.id} className="p-4">
-                  <div className="flex gap-4">
-                    {/* Image */}
-                    <Link
-                      href={`${basePath}/products/${item.slug}`}
-                      className="relative w-24 h-24 bg-gray-100 rounded overflow-hidden flex-shrink-0"
-                      onClick={closeCart}
-                    >
-                      <ProductImage
-                        src={item.thumbnail_url}
-                        alt={item.name}
-                        fill
-                        className="object-cover"
-                        sizes="96px"
-                      />
-                    </Link>
-
-                    {/* Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <Link
-                          href={`${basePath}/products/${item.slug}`}
-                          className="font-medium text-gray-900 hover:text-primary line-clamp-2"
-                          onClick={closeCart}
-                        >
-                          {item.name}
-                        </Link>
-                        <Button
-                          variant="destructive"
-                          size="icon-xs"
-                          onClick={async () => {
-                            await removeItem(item.id);
-                            if (cart) {
-                              trackRemoveFromCart(item, cart.currency);
-                            }
-                          }}
-                          disabled={updating}
-                          aria-label={t("removeItemLabel", { name: item.name })}
-                        >
-                          <Trash className="w-4 h-4" />
-                        </Button>
-                      </div>
-
-                      {/* Options */}
-                      {item.options_text && (
-                        <p className="mt-1 text-sm text-gray-500">
-                          {item.options_text}
-                        </p>
-                      )}
-
-                      {/* Quantity & Price */}
-                      <div className="mt-3 flex items-center justify-between">
-                        <QuantityPickerField
-                          quantity={item.quantity}
-                          onQuantityChange={(quantity) =>
-                            updateItem(item.id, quantity)
-                          }
-                          disabled={updating}
+              {lineItems.map((item) => {
+                let itemThumb = item.thumbnail_url;
+                if (!itemThumb) {
+                  const s =
+                    item.slug?.toLowerCase() || item.name?.toLowerCase() || "";
+                  if (s.includes("ghee"))
+                    itemThumb = "/images/seth-a2-ghee.jpg";
+                  else if (s.includes("mustard") || s.includes("oil"))
+                    itemThumb = "/images/seth-mustard-oil.jpg";
+                  else if (s.includes("mango"))
+                    itemThumb = "/images/seth-alphonso-mangoes.jpg";
+                }
+                return (
+                  <li key={item.id} className="p-4">
+                    <div className="flex gap-4">
+                      {/* Image */}
+                      <Link
+                        href={`${basePath}/products/${item.slug}`}
+                        className="relative w-24 h-24 bg-[#F9F7F2] rounded-xl overflow-hidden flex-shrink-0 border border-[#E6E1D8]"
+                        onClick={closeCart}
+                      >
+                        <ProductImage
+                          src={itemThumb}
+                          alt={item.name}
+                          fill
+                          className="object-cover"
+                          sizes="96px"
                         />
+                      </Link>
 
-                        <div className="text-sm font-medium">
-                          {item.compare_at_amount &&
-                          item.price != null &&
-                          parseFloat(item.compare_at_amount) >
-                            parseFloat(item.price) ? (
-                            <>
-                              <span className="text-gray-400 line-through mr-2">
-                                {item.display_compare_at_amount}
+                      {/* Details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                          <Link
+                            href={`${basePath}/products/${item.slug}`}
+                            className="font-medium text-gray-900 hover:text-primary line-clamp-2"
+                            onClick={closeCart}
+                          >
+                            {item.name}
+                          </Link>
+                          <Button
+                            variant="destructive"
+                            size="icon-xs"
+                            onClick={async () => {
+                              await removeItem(item.id);
+                              if (cart) {
+                                trackRemoveFromCart(item, cart.currency);
+                              }
+                            }}
+                            disabled={updating}
+                            aria-label={t("removeItemLabel", {
+                              name: item.name,
+                            })}
+                          >
+                            <Trash className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {/* Options */}
+                        {item.options_text && (
+                          <p className="mt-1 text-sm text-gray-500">
+                            {item.options_text}
+                          </p>
+                        )}
+
+                        {/* Quantity & Price */}
+                        <div className="mt-3 flex items-center justify-between">
+                          <QuantityPickerField
+                            quantity={item.quantity}
+                            onQuantityChange={(quantity) =>
+                              updateItem(item.id, quantity)
+                            }
+                            disabled={updating}
+                          />
+
+                          <div className="text-sm font-medium">
+                            {item.compare_at_amount &&
+                            item.price != null &&
+                            parseFloat(item.compare_at_amount) >
+                              parseFloat(item.price) ? (
+                              <>
+                                <span className="text-gray-400 line-through mr-2">
+                                  {item.compare_at_amount
+                                    ? formatPrice(
+                                        item.compare_at_amount,
+                                        cart?.currency || "INR",
+                                        "en-IN",
+                                      )
+                                    : item.display_compare_at_amount}
+                                </span>
+                                <span className="text-red-600 font-semibold">
+                                  {item.price != null
+                                    ? formatPrice(
+                                        item.price,
+                                        cart?.currency || "INR",
+                                        "en-IN",
+                                      )
+                                    : item.display_price}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-gray-900 font-semibold">
+                                {item.price != null
+                                  ? formatPrice(
+                                      item.price,
+                                      cart?.currency || "INR",
+                                      "en-IN",
+                                    )
+                                  : item.display_price}
                               </span>
-                              <span className="text-red-600">
-                                {item.display_price}
-                              </span>
-                            </>
-                          ) : (
-                            <span className="text-gray-900">
-                              {item.display_price}
-                            </span>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -237,9 +306,17 @@ export function CartDrawer() {
               <>
                 {/* Summary */}
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center font-medium">
                     <span>{tc("subtotal")}</span>
-                    <span>{cart?.display_item_total}</span>
+                    <span className="text-[#1b4332] font-bold">
+                      {cart?.item_total != null
+                        ? formatPrice(
+                            cart.item_total,
+                            cart?.currency || "INR",
+                            "en-IN",
+                          )
+                        : cart?.display_item_total}
+                    </span>
                   </div>
                   {cart?.discount_total &&
                     parseFloat(cart.discount_total) < 0 && (

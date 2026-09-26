@@ -13,9 +13,20 @@ let _wholesaleClient: Client | null = null;
  */
 export function initSpreeNext(config: SpreeNextConfig): void {
   _config = config;
+  const currency =
+    config.defaultCurrency || process.env.NEXT_PUBLIC_DEFAULT_CURRENCY || "INR";
+  const locale =
+    config.defaultLocale || process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "en-IN";
+  const country =
+    config.defaultCountry ||
+    (process.env.NEXT_PUBLIC_DEFAULT_COUNTRY || "in").toLowerCase();
+
   _client = createClient({
     baseUrl: config.baseUrl,
     publishableKey: config.publishableKey,
+    currency,
+    locale,
+    country,
   });
 }
 
@@ -26,8 +37,19 @@ export function getClient(): Client {
   if (!_client) {
     const baseUrl = process.env.SPREE_API_URL;
     const publishableKey = process.env.SPREE_PUBLISHABLE_KEY;
+    const defaultCurrency = process.env.NEXT_PUBLIC_DEFAULT_CURRENCY || "INR";
+    const defaultLocale = process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "en-IN";
+    const defaultCountry = (
+      process.env.NEXT_PUBLIC_DEFAULT_COUNTRY || "in"
+    ).toLowerCase();
     if (baseUrl && publishableKey) {
-      initSpreeNext({ baseUrl, publishableKey });
+      initSpreeNext({
+        baseUrl,
+        publishableKey,
+        defaultCurrency,
+        defaultLocale,
+        defaultCountry,
+      });
     } else {
       throw new Error(
         "Spree client is not configured. Either call initSpreeNext() or set SPREE_API_URL and SPREE_PUBLISHABLE_KEY environment variables.",
@@ -97,10 +119,21 @@ export function getWholesaleClient(): Client {
     process.env.SPREE_WHOLESALE_PUBLISHABLE_KEY?.trim() ||
     config.publishableKey;
 
+  const currency =
+    config.defaultCurrency || process.env.NEXT_PUBLIC_DEFAULT_CURRENCY || "INR";
+  const locale =
+    config.defaultLocale || process.env.NEXT_PUBLIC_DEFAULT_LOCALE || "en-IN";
+  const country =
+    config.defaultCountry ||
+    (process.env.NEXT_PUBLIC_DEFAULT_COUNTRY || "in").toLowerCase();
+
   _wholesaleClient = createClient({
     baseUrl: config.baseUrl,
     publishableKey,
     channel,
+    currency,
+    locale,
+    country,
   });
   return _wholesaleClient;
 }

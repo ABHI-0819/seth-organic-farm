@@ -1,7 +1,16 @@
 "use client";
 
 import type { Media, Product, Variant } from "@spree/sdk";
-import { CircleCheckBig, CircleX, Loader2, ShoppingBag } from "lucide-react";
+import {
+  AlertTriangle,
+  CircleCheckBig,
+  CircleX,
+  Loader2,
+  Package,
+  ShieldCheck,
+  ShoppingBag,
+  Truck,
+} from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
@@ -15,6 +24,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useHiddenPricing } from "@/contexts/HiddenPricingContext";
 import { useStore } from "@/contexts/StoreContext";
 import { trackAddToCart, trackViewItem } from "@/lib/analytics/gtm";
+import { formatProductPrice } from "@/lib/utils/format";
 
 interface ProductDetailsProps {
   product: Product;
@@ -74,7 +84,9 @@ export function ProductDetails({ product, basePath }: ProductDetailsProps) {
   const price = selectedVariant?.price ?? product.price;
   const originalPrice =
     selectedVariant?.original_price ?? product.original_price;
-  const displayPrice = price?.display_amount;
+  const displayPrice = price
+    ? formatProductPrice(price, currency || "INR", "en-IN")
+    : null;
 
   const currentAmountCents = price?.amount_in_cents;
   const originalAmountCents = originalPrice?.amount_in_cents;
@@ -88,10 +100,14 @@ export function ProductDetails({ product, basePath }: ProductDetailsProps) {
       currentAmountCents < compareAtAmountCents);
 
   const strikethroughPrice = onSale
-    ? ((originalPrice?.display_amount &&
-      originalPrice.display_amount !== displayPrice
-        ? originalPrice.display_amount
-        : price?.display_compare_at_amount) ?? null)
+    ? formatProductPrice(
+        originalPrice || {
+          amount: price?.compare_at_amount,
+          currency: price?.currency,
+        },
+        currency || "INR",
+        "en-IN",
+      )
     : null;
 
   const sku = selectedVariant?.sku ?? product.default_variant?.sku;
@@ -120,8 +136,19 @@ export function ProductDetails({ product, basePath }: ProductDetailsProps) {
     trackAddToCart(product, selectedVariant, quantity, currency);
   };
 
+  const weight = selectedVariant?.weight || product.default_variant?.weight;
+  const slugLower = product.slug?.toLowerCase() || "";
+  const isGhee =
+    slugLower.includes("ghee") || product.name?.toLowerCase().includes("ghee");
+  const isMango =
+    slugLower.includes("mango") ||
+    product.name?.toLowerCase().includes("mango");
+  const isLowStockTrigger =
+    selectedVariant?.sku === "SOF-GHEE-5L" ||
+    (selectedVariant?.options_text?.includes("5L") ?? false);
+
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8  py-8">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Media Gallery */}
         <div>
@@ -134,39 +161,110 @@ export function ProductDetails({ product, basePath }: ProductDetailsProps) {
 
         {/* Product Info */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
+          {/* Organic Category Badge */}
+          <div className="flex items-center gap-2 mb-2.5">
+            <span className="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+              {isGhee
+                ? "Vedic Bilona Certified"
+                : isMango
+                  ? "Seasonal Pre-Order Harvest"
+                  : "Wood Cold-Pressed Kachi Ghani"}
+            </span>
+            <span className="text-[#d4a373] text-xs font-semibold">
+              100% Pure Organic
+            </span>
+          </div>
 
-          {/* Price */}
-          <div className="mt-4 flex items-center gap-4">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#1b4332] leading-tight">
+            {product.name}
+          </h1>
+
+          {/* Price & Weight */}
+          <div className="mt-4 flex flex-wrap items-baseline gap-4">
             {displayPrice ? (
-              <span className="text-3xl font-bold text-gray-900">
-                {displayPrice}
-              </span>
+              <div className="flex items-baseline gap-3">
+                <span className="text-3xl font-extrabold text-[#1b4332]">
+                  {displayPrice}
+                </span>
+                {weight && (
+                  <span className="text-xs text-[#52796f] font-semibold bg-[#f4efea] px-2.5 py-1 rounded-lg border border-[#e3dcd2]">
+                    Weight: {weight} kg
+                  </span>
+                )}
+              </div>
             ) : (
               <HiddenPricePrompt className="inline-flex items-center gap-1.5 text-base font-medium text-slate-600 underline underline-offset-4 hover:text-slate-900" />
             )}
             {onSale && strikethroughPrice && (
               <>
-                <span className="text-xl text-gray-500 line-through">
+                <span className="text-xl text-gray-400 line-through">
                   {strikethroughPrice}
                 </span>
-                <span className="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">
+                <span className="bg-red-100 text-red-800 text-xs font-bold px-2.5 py-0.5 rounded-full">
                   {t("sale")}
                 </span>
               </>
             )}
           </div>
 
+          {/* Low Stock Warning Trigger */}
+          {isLowStockTrigger && (
+            <div className="flex items-center gap-2.5 p-3.5 my-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs font-semibold shadow-xs">
+              <AlertTriangle className="size-4 text-amber-600 shrink-0" />
+              <span>
+                Only 5 canisters remaining from this morning's churn batch.
+              </span>
+            </div>
+          )}
+
+          {/* Pre-order Mango Batch Trigger */}
+          {isMango && (
+            <div className="flex items-center gap-2.5 p-3.5 my-3 bg-orange-50 border border-orange-200 text-orange-950 rounded-xl text-xs font-semibold shadow-xs">
+              <Package className="size-4 text-orange-600 shrink-0" />
+              <span>
+                Harvest Batch #1: Scheduled tree harvest dispatches April 15 -
+                April 22.
+              </span>
+            </div>
+          )}
+
+          {/* Packaging & Handling Badges */}
+          <div className="grid grid-cols-3 gap-2.5 py-3.5 border-y border-[#e3dcd2] my-5 text-xs text-[#1b4332]">
+            <div className="flex items-center gap-2">
+              <Package className="size-4 text-[#d4a373] shrink-0" />
+              <span className="font-semibold text-[11px] leading-tight">
+                UV Glass Packaging
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Truck className="size-4 text-[#d4a373] shrink-0" />
+              <span className="font-semibold text-[11px] leading-tight">
+                Fragile Safe Transit
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="size-4 text-[#d4a373] shrink-0" />
+              <span className="font-semibold text-[11px] leading-tight">
+                100% Lab Pure
+              </span>
+            </div>
+          </div>
+
           {/* Stock Status */}
-          <div className="mt-4">
-            {inStock ? (
-              <span className="inline-flex items-center gap-1.5 text-green-600">
-                <CircleCheckBig className="w-5 h-5" />
-                {t("inStock")}
+          <div className="mt-2">
+            {isMango ? (
+              <span className="inline-flex items-center gap-1.5 text-orange-600 text-xs font-bold">
+                <CircleCheckBig className="w-4 h-4" />
+                Pre-Order Open for Batch #1
+              </span>
+            ) : inStock ? (
+              <span className="inline-flex items-center gap-1.5 text-emerald-700 text-xs font-semibold">
+                <CircleCheckBig className="w-4 h-4" />
+                {t("inStock")} (Jaipur Farm Ready)
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 text-red-600">
-                <CircleX className="w-5 h-5" />
+              <span className="inline-flex items-center gap-1.5 text-red-600 text-xs font-semibold">
+                <CircleX className="w-4 h-4" />
                 {t("outOfStock")}
               </span>
             )}

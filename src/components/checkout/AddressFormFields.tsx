@@ -109,6 +109,41 @@ export function AddressFormFields({
       <div className="grid grid-cols-3 gap-3">
         <Input
           type="text"
+          id={`${idPrefix}-postal_code`}
+          aria-label={t("zipCode")}
+          required
+          value={address.postal_code}
+          onChange={async (e) => {
+            const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+            onChange("postal_code", val);
+            if (
+              val.length === 6 &&
+              (address.country_iso?.toLowerCase() === "in" ||
+                !address.country_iso)
+            ) {
+              try {
+                const res = await fetch(
+                  `https://api.postalpincode.in/pincode/${val}`,
+                );
+                const data = await res.json();
+                if (data[0]?.Status === "Success" && data[0].PostOffice?.[0]) {
+                  const po = data[0].PostOffice[0];
+                  onChange("city", po.District || po.Block || "");
+                  if (po.State) {
+                    onChange("state_name", po.State);
+                  }
+                }
+              } catch {
+                // Ignore API failures and preserve manual input
+              }
+            }
+          }}
+          placeholder="PIN Code (6 digits)"
+          maxLength={6}
+          className="font-mono text-xs"
+        />
+        <Input
+          type="text"
           id={`${idPrefix}-city`}
           aria-label={t("city")}
           required
@@ -153,26 +188,37 @@ export function AddressFormFields({
             placeholder={t("stateProvince")}
           />
         )}
-        <Input
-          type="text"
-          id={`${idPrefix}-postal_code`}
-          aria-label={t("zipCode")}
-          required
-          value={address.postal_code}
-          onChange={(e) => onChange("postal_code", e.target.value)}
-          placeholder={t("zipCode")}
-        />
       </div>
 
-      {/* Phone */}
-      <Input
-        type="tel"
-        id={`${idPrefix}-phone`}
-        aria-label={t("phone")}
-        value={address.phone}
-        onChange={(e) => onChange("phone", e.target.value)}
-        placeholder={t("phone")}
-      />
+      {/* Phone with Indian Mobile Validation */}
+      <div>
+        <div className="flex">
+          <span className="inline-flex items-center px-3 bg-[#F4EFEA] border border-r-0 border-[#E6E1D8] rounded-l-md text-xs font-semibold text-[#52796F]">
+            +91
+          </span>
+          <Input
+            type="tel"
+            id={`${idPrefix}-phone`}
+            aria-label={t("phone")}
+            required
+            value={address.phone}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+              onChange("phone", val);
+            }}
+            placeholder="10-digit mobile (for dispatch WhatsApp)"
+            maxLength={10}
+            className="rounded-l-none font-mono text-xs"
+          />
+        </div>
+        {address.phone &&
+          address.phone.length > 0 &&
+          address.phone.length !== 10 && (
+            <p className="text-red-500 text-[10px] mt-1">
+              Please enter a valid 10-digit Indian mobile number
+            </p>
+          )}
+      </div>
     </div>
   );
 }

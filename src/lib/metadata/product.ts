@@ -43,16 +43,20 @@ export async function generateProductMetadata({
         path: `/products/${product.slug}`,
         currentResourceFingerprint: productTranslationFingerprint(product),
         resolvePath: async (target) => {
-          const localizedProduct = await cachedGetProduct(
-            product.id,
-            [],
-            { country: target.country, locale: target.locale },
-            DEFAULT_SURFACE,
-          );
-          return {
-            path: `/products/${localizedProduct.slug}`,
-            fingerprint: productTranslationFingerprint(localizedProduct),
-          };
+          try {
+            const localizedProduct = await cachedGetProduct(
+              product.id,
+              [],
+              { country: target.country, locale: target.locale },
+              DEFAULT_SURFACE,
+            );
+            return {
+              path: `/products/${localizedProduct.slug}`,
+              fingerprint: productTranslationFingerprint(localizedProduct),
+            };
+          } catch {
+            return null;
+          }
         },
       })
     : undefined;

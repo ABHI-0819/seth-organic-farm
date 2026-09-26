@@ -20,6 +20,7 @@ name: storefront-e2e
 services:
   postgres:
     image: postgres:18-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     healthcheck:
@@ -30,6 +31,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     healthcheck:
       test: redis-cli ping
       interval: 5s
@@ -41,6 +43,7 @@ services:
     # create-spree-app / spree-starter build. Override for a pinned run:
     #   SPREE_IMAGE=ghcr.io/spree/spree:5.6.0.rc4.1 docker compose … up
     image: ${SPREE_IMAGE:-ghcr.io/spree/spree:latest}
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy

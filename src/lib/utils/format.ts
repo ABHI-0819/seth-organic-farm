@@ -54,3 +54,63 @@ export function getFulfillmentStatusColor(state: string | null): string {
       return "bg-gray-100 text-gray-800";
   }
 }
+
+/**
+ * Format a numeric or string monetary amount with currency formatting.
+ * Defaults to Indian Rupees (INR / ₹) with 'en-IN' locale.
+ */
+export function formatPrice(
+  amount: number | string | null | undefined,
+  currency = "INR",
+  locale = "en-IN",
+): string {
+  if (amount == null) return "";
+  const numeric =
+    typeof amount === "string"
+      ? parseFloat(amount.replace(/[^0-9.-]+/g, ""))
+      : amount;
+  if (Number.isNaN(numeric)) return String(amount);
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(numeric);
+  } catch {
+    return `₹${numeric.toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
+}
+
+/**
+ * Format a product or line-item price object to guarantee correct INR (₹) display.
+ */
+export function formatProductPrice(
+  priceObj?: {
+    display_amount?: string | null;
+    amount?: string | number | null;
+    amount_in_cents?: number | null;
+    currency?: string | null;
+  } | null,
+  currency = "INR",
+  locale = "en-IN",
+): string {
+  if (!priceObj) return "";
+  if (priceObj.display_amount) {
+    return priceObj.display_amount;
+  }
+  if (priceObj.amount != null) {
+    return formatPrice(priceObj.amount, priceObj.currency || currency, locale);
+  }
+  if (priceObj.amount_in_cents != null) {
+    return formatPrice(
+      priceObj.amount_in_cents / 100,
+      priceObj.currency || currency,
+      locale,
+    );
+  }
+  return "";
+}

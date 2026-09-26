@@ -26,7 +26,7 @@ import {
  */
 export async function cachedListProducts(
   params: ProductListParams | undefined,
-  options: { locale?: string; country?: string },
+  options: { locale?: string; country?: string; currency?: string },
   surface: Surface,
   userToken?: string,
 ) {
@@ -34,6 +34,7 @@ export async function cachedListProducts(
   cacheLife("tenMinutes");
   cacheTag(`products${cacheTagSuffix(surface)}`);
   return getClientForSurface(surface).products.list(params, {
+    currency: options.currency || "INR",
     ...options,
     // Wholesale catalog requires the customer JWT — the channel is gated.
     ...(surface === "wholesale" && userToken
@@ -64,7 +65,7 @@ export async function getProducts(
 export async function cachedGetProduct(
   slugOrId: string,
   expand: string[],
-  options: { locale?: string; country?: string },
+  options: { locale?: string; country?: string; currency?: string },
   surface: Surface,
   userToken?: string,
 ) {
@@ -78,6 +79,7 @@ export async function cachedGetProduct(
     slugOrId,
     { expand },
     {
+      currency: options.currency || "INR",
       ...options,
       ...(surface === "wholesale" && userToken
         ? { token: userToken }

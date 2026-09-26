@@ -38,12 +38,14 @@ export async function generateStoreMetadata({
   return {
     ...metadataBaseSpread,
     title: {
-      template: `%s | ${storeName}`,
+      template: `%s | ${getStoreName()}`,
       default: storeName,
     },
     description: metaDescription,
     ...(metaKeywords ? { keywords: metaKeywords } : {}),
     openGraph: {
+      title: storeName,
+      description: metaDescription,
       siteName: getStoreName(),
       locale: normalizeOpenGraphLocale(locale),
       type: "website",

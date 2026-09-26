@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 48" fill="none" class="w-auto h-9">
+  <!-- Brand Icon: Leaf / Organic Sprout with Golden Accent -->
+  <g transform="translate(4, 4)">
+    <!-- Base Circle background -->
+    <rect width="40" height="40" rx="12" fill="#1B4332" />
+    <!-- Leaf veins & curves -->
+    <path d="M20 9C13 14 11 23 15 29C17 32 20 34 23 34C28 34 32 29 32 23C32 15 25 10 20 9Z" fill="#52B788" fill-opacity="0.9" />
+    <path d="M15 28C19 22 25 17 29 13" stroke="#FBF9F5" stroke-width="2" stroke-linecap="round" />
+    <path d="M20 22C23 21 26 22 28 24" stroke="#FBF9F5" stroke-width="1.5" stroke-linecap="round" />
+    <path d="M17 25C19 26 21 27 23 27" stroke="#FBF9F5" stroke-width="1.5" stroke-linecap="round" />
+    <!-- Golden organic droplet -->
+    <circle cx="27" cy="12" r="3" fill="#D4A373" />
+  </g>
+  <!-- Wordmark -->
+  <g transform="translate(54, 18)">
+    <text x="0" y="9" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="16" font-weight="800" fill="#1B4332" letter-spacing="-0.02em">
+      SETH <tspan fill="#2D6A4F" font-weight="600">ORGANIC</tspan>
+    </text>
+    <text x="0" y="22" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="9" font-weight="700" fill="#B38048" letter-spacing="0.22em">
+      FORM • PURE NATURE
+    </text>
+  </g>
+</svg>

@@ -1,0 +1,112 @@
+# ==============================================================================
+# Seth Organic Farm - Production Docker Compose Architecture
+# Services: web (Spree Puma), db (PostgreSQL 16), redis (Sidekiq/Cache), caddy (SSL Reverse Proxy)
+# ==============================================================================
+
+name: seth-organic-prod
+
+services:
+  # --- 1. PostgreSQL Database ---
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sethorganic}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeMeSecurePassword123!}
+      POSTGRES_DB: ${POSTGRES_DB:-seth_organic_production}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sethorganic} -d ${POSTGRES_DB:-seth_organic_production}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal_net
+
+  # --- 2. Redis In-Memory Cache & Sidekiq Broker ---
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-RedisSecurePass999!}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-RedisSecurePass999!}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal_net
+
+  # --- 3. Unified Spree Rails Monolith (Customer Storefront + Admin) ---
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.spree
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      RAILS_ENV: production
+      RAILS_SERVE_STATIC_FILES: "true"
+      RAILS_LOG_TO_STDOUT: "true"
+      RAILS_MAX_THREADS: ${RAILS_MAX_THREADS:-5}
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:?SECRET_KEY_BASE is required in production}
+      DATABASE_URL: postgres://${POSTGRES_USER:-sethorganic}:${POSTGRES_PASSWORD:-ChangeMeSecurePassword123!}@db:5432/${POSTGRES_DB:-seth_organic_production}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-RedisSecurePass999!}@redis:6379/0
+      RAILS_HOST: ${DOMAIN:-sethorganicfarm.com}
+      RAILS_FORCE_SSL: "true"
+      RAILS_ASSUME_SSL: "true"
+      # Store Defaults
+      DEFAULT_CURRENCY: INR
+      DEFAULT_COUNTRY_ISO: IN
+      # Admin Credentials for Initial Bootstrap
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@sethorganicfarm.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-ChangeMeAdminPass2026!}
+    volumes:
+      - rails_storage:/rails/storage
+    expose:
+      - "3000"
+    networks:
+      - internal_net
+
+  # --- 4. Caddy Edge Proxy with Automated Let's Encrypt SSL ---
+  caddy:
+    image: caddy:2-alpine
+    restart: always
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3 QUIC
+    environment:
+      DOMAIN: ${DOMAIN:-sethorganicfarm.com}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@sethorganicfarm.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - internal_net
+
+volumes:
+  postgres_data:
+    name: seth_prod_postgres_data
+  redis_data:
+    name: seth_prod_redis_data
+  rails_storage:
+    name: seth_prod_rails_storage
+  caddy_data:
+    name: seth_prod_caddy_data
+  caddy_config:
+    name: seth_prod_caddy_config
+
+networks:
+  internal_net:
+    driver: bridge

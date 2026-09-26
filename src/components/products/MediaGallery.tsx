@@ -108,13 +108,24 @@ function MediaGalleryInner({
   );
 
   if (images.length === 0) {
+    let fallbackSrc: string | null = null;
+    const nameLower = productName.toLowerCase();
+    if (nameLower.includes("ghee")) {
+      fallbackSrc = "/images/seth-a2-ghee.jpg";
+    } else if (nameLower.includes("mustard") || nameLower.includes("oil")) {
+      fallbackSrc = "/images/seth-mustard-oil.jpg";
+    } else if (nameLower.includes("mango")) {
+      fallbackSrc = "/images/seth-alphonso-mangoes.jpg";
+    }
+
     return (
-      <div className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden">
+      <div className="relative aspect-square bg-[#f4efea] rounded-2xl overflow-hidden border border-[#e3dcd2] shadow-sm">
         <ProductImage
-          src={null}
+          src={fallbackSrc}
           alt={productName}
           fill
-          iconClassName="w-24 h-24"
+          className="object-cover"
+          iconClassName="w-24 h-24 text-[#8ac9a3]"
         />
       </div>
     );

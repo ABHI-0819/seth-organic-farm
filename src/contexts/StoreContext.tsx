@@ -90,7 +90,10 @@ export function StoreProvider({
   const locale = selectedCountry
     ? initialLocale
     : (countries[0]?.default_locale ?? initialLocale);
-  const currency = selectedCountry?.currency ?? countries[0]?.currency ?? "USD";
+  const currency =
+    selectedCountry?.currency ??
+    countries[0]?.currency ??
+    (process.env.NEXT_PUBLIC_DEFAULT_CURRENCY || "INR");
 
   const value = useMemo<StoreContextValue>(
     () => ({

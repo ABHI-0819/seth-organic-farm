@@ -14,6 +14,7 @@ import { ProductImage } from "@/components/ui/product-image";
 import { useStore } from "@/contexts/StoreContext";
 import { trackQuickSearch, trackSelectItem } from "@/lib/analytics/gtm";
 import { getProducts } from "@/lib/data/products";
+import { formatProductPrice } from "@/lib/utils/format";
 
 interface SearchBarProps {
   basePath: string;
@@ -228,9 +229,13 @@ export function SearchBar({ basePath, autoFocus, onNavigate }: SearchBarProps) {
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {product.name}
                         </p>
-                        {product.price?.display_amount && (
-                          <p className="text-sm text-gray-500">
-                            {product.price.display_amount}
+                        {product.price && (
+                          <p className="text-sm font-semibold text-[#1b4332]">
+                            {formatProductPrice(
+                              product.price,
+                              currency || "INR",
+                              "en-IN",
+                            )}
                           </p>
                         )}
                       </div>

@@ -132,6 +132,30 @@ export default function OrderPlacedPage({ params }: OrderPlacedPageProps) {
         <p className="text-sm text-gray-400 mt-2">{t("emailConfirmation")}</p>
       </div>
 
+      {/* Estimated Farm Dispatch & Live Tracking Banner */}
+      <div className="bg-[#EBF3ED] p-5 rounded-2xl border border-[#D8E6DC] mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <span className="size-3 rounded-full bg-emerald-600 animate-pulse mt-1 shrink-0" />
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#1F2E22]">
+              Estimated Farm Dispatch
+            </h4>
+            <p className="text-xs text-[#52796F] mt-0.5 leading-relaxed">
+              Fresh batch dispatches from Jaipur Farm within 24 hours in
+              UV-protected glass cushioning with straw buffers.
+            </p>
+          </div>
+        </div>
+        <Button
+          asChild
+          className="bg-[#1F2E22] hover:bg-[#2D4030] text-white rounded-xl text-xs font-semibold px-5 py-2.5 shrink-0 shadow-sm"
+        >
+          <Link href={`${basePath}/track-order?order=${order.number}`}>
+            Track Your Order
+          </Link>
+        </Button>
+      </div>
+
       {/* Order Items */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
         <div className="px-6 py-4 border-b border-gray-200">
@@ -140,33 +164,44 @@ export default function OrderPlacedPage({ params }: OrderPlacedPageProps) {
           </h2>
         </div>
         <ul className="divide-y divide-gray-200">
-          {order.items?.map((item) => (
-            <li key={item.id} className="px-6 py-4 flex gap-4">
-              <div className="relative w-14 h-14 bg-gray-100 rounded-xl flex-shrink-0 overflow-hidden">
-                <ProductImage
-                  src={item.thumbnail_url}
-                  alt={item.name}
-                  fill
-                  className="object-cover"
-                  iconClassName="w-6 h-6"
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-medium text-gray-900">
-                  {item.name}
-                </h3>
-                {item.options_text && (
-                  <p className="text-sm text-gray-500">{item.options_text}</p>
-                )}
-                <p className="text-sm text-gray-500">
-                  {t("qty", { quantity: item.quantity })}
-                </p>
-              </div>
-              <div className="text-sm font-medium text-gray-900">
-                {item.display_total}
-              </div>
-            </li>
-          ))}
+          {order.items?.map((item) => {
+            let itemImg = item.thumbnail_url;
+            if (!itemImg) {
+              const s = item.name?.toLowerCase() || "";
+              if (s.includes("ghee")) itemImg = "/images/seth-a2-ghee.jpg";
+              else if (s.includes("mustard") || s.includes("oil"))
+                itemImg = "/images/seth-mustard-oil.jpg";
+              else if (s.includes("mango"))
+                itemImg = "/images/seth-alphonso-mangoes.jpg";
+            }
+            return (
+              <li key={item.id} className="px-6 py-4 flex gap-4">
+                <div className="relative w-14 h-14 bg-[#F9F7F2] rounded-xl flex-shrink-0 overflow-hidden border border-[#E6E1D8]">
+                  <ProductImage
+                    src={itemImg}
+                    alt={item.name}
+                    fill
+                    className="object-cover"
+                    iconClassName="w-6 h-6"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-medium text-gray-900">
+                    {item.name}
+                  </h3>
+                  {item.options_text && (
+                    <p className="text-sm text-gray-500">{item.options_text}</p>
+                  )}
+                  <p className="text-sm text-gray-500">
+                    {t("qty", { quantity: item.quantity })}
+                  </p>
+                </div>
+                <div className="text-sm font-medium text-gray-900">
+                  {item.display_total}
+                </div>
+              </li>
+            );
+          })}
         </ul>
 
         {/* Totals */}
@@ -260,9 +295,31 @@ export default function OrderPlacedPage({ params }: OrderPlacedPageProps) {
       </div>
 
       {/* Actions */}
-      <div className="text-center">
-        <Button size="lg" asChild>
-          <Link href={`${basePath}/`}>{tc("continueShopping")}</Link>
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+        <Button
+          size="lg"
+          className="w-full sm:w-auto bg-[#1F2E22] hover:bg-[#2D4030] text-white rounded-xl shadow-md"
+          asChild
+        >
+          <Link href={`${basePath}/track-order?order=${order.number}`}>
+            Track Your Order
+          </Link>
+        </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          className="w-full sm:w-auto rounded-xl border-[#E6E1D8] text-[#1F2E22]"
+          onClick={() => window.print()}
+        >
+          Print Farm Invoice
+        </Button>
+        <Button
+          size="lg"
+          variant="ghost"
+          className="w-full sm:w-auto rounded-xl text-[#52796F]"
+          asChild
+        >
+          <Link href={`${basePath}/products`}>{tc("continueShopping")}</Link>
         </Button>
       </div>
     </div>
