@@ -229,7 +229,7 @@ export function ProductDetails({ product, basePath }: ProductDetailsProps) {
           )}
 
           {/* Packaging & Handling Badges */}
-          <div className="grid grid-cols-3 gap-2.5 py-3.5 border-y border-[#e3dcd2] my-5 text-xs text-[#1b4332]">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 py-3.5 border-y border-[#e3dcd2] my-5 text-xs text-[#1b4332]">
             <div className="flex items-center gap-2">
               <Package className="size-4 text-[#d4a373] shrink-0" />
               <span className="font-semibold text-[11px] leading-tight">
@@ -293,7 +293,7 @@ export function ProductDetails({ product, basePath }: ProductDetailsProps) {
                 </Link>
               </Button>
             ) : (
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <QuantityPickerField
                   quantity={quantity}
                   onQuantityChange={setQuantity}
@@ -303,6 +303,7 @@ export function ProductDetails({ product, basePath }: ProductDetailsProps) {
                 {/* Add to Cart Button */}
                 <Button
                   size="lg"
+                  className="w-full sm:w-auto flex-1"
                   onClick={handleAddToCart}
                   disabled={loading || !isPurchasable}
                 >

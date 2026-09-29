@@ -60,13 +60,15 @@ export function SearchToggle({
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex items-center h-full w-full">
             {/* Left section */}
-            <div className="flex items-center flex-1">{left}</div>
+            <div className="flex items-center shrink-0">{left}</div>
 
             {/* Center section */}
-            <div className="flex justify-center min-w-0">{center}</div>
+            <div className="flex-1 flex justify-center min-w-0 px-1 sm:px-2">
+              {center}
+            </div>
 
             {/* Right section */}
-            <div className="flex items-center flex-1 justify-end space-x-2">
+            <div className="flex items-center shrink-0 justify-end space-x-1 sm:space-x-2">
               {rightStart}
 
               {/* Search toggle */}

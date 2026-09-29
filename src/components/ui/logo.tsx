@@ -78,13 +78,13 @@ export function Logo({
               isDark ? "text-[#D4A373]" : "text-[#8C6239]",
             )}
           >
-            Form
+            Farm
           </span>
         </div>
         {!hideTagline && (
           <span
             className={cn(
-              "text-[9px] sm:text-[10px] font-bold tracking-[0.2em] uppercase mt-0.5",
+              "hidden sm:block text-[9px] sm:text-[10px] font-bold tracking-[0.2em] uppercase mt-0.5",
               isDark ? "text-[#D4A373]/90" : "text-[#B38048]",
             )}
           >
